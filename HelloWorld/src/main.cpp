@@ -3,7 +3,7 @@
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);                       // initialze the serial com port on the ESP board with the .begin(baudrate) function
-  Serial.print("Hello World !");            // lez print a new line on the serial console with "Hello World" for greeting
+  Serial.print("Hello World !");            // lez print a new line on the serial console with a string "Hello World" for greeting
 
 }
 
