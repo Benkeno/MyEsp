@@ -1,10 +1,14 @@
 #include <Arduino.h>
 
-// Measuring Distance with ESP32 and Ultrasonic Sensor 
+// Measuring Distance with ESP32 and Ultrasonic Sensor !
+// Three different ranges are indicated by 3 LEDs 
 
 // define pin variables
 const int trigPin = 12;                   // Pin 12 does not chang -> const int
 const int echoPin = 13;                   // Pin 13 does not change -> const int
+const int bluePin = 27;
+const int greenPin = 26;
+const int redPin = 25;
 
 // defines changing variables
 long duration;                            // long data type for duration
@@ -12,14 +16,17 @@ float distance;                           // float data for precise xx.xxx measu
 
 // define variables for timer
 unsigned long previousMillis = 0;         // unsigned long for timer reset because this number can reach high values
-const long  interval = 1000;              // constant long varibale for the interval
+const long  interval = 200;              // constant long varibale for the interval
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);                   // Begin Serial comunication
   pinMode(trigPin, OUTPUT);               // Sets the trigPin as an Output
   pinMode(echoPin, INPUT);                // Sets the echoPin as an Input
- 
+  pinMode(bluePin, OUTPUT);               // Sets the bluePin as an Input
+  pinMode(greenPin, OUTPUT);              // Sets the greenPin as an Input
+  pinMode(redPin, OUTPUT);                // Sets the redPin as an Input
+
 
 }
 
@@ -50,6 +57,22 @@ void loop() {
     Serial.print("Distance: ");                           // Prints the distance in "cm" on the Serial Monitor
     Serial.print(distance);
     Serial.println(" cm");
-    
+
+    if ((distance > 30.0f) && (distance < 50.0f)) {       // bluePin range
+      digitalWrite(bluePin, HIGH);                        // Set blue LED on
+      }
+    else if ((distance <=30.0f) && (distance > 10.0f)) {  // greenPin range
+      digitalWrite(greenPin, HIGH);                       // Set green LED on
+      }
+    else if (distance <= 10.0) {                          // redPin range
+      digitalWrite(redPin, HIGH);                         // Set red LED on
+      }
+
+    else {
+      digitalWrite(bluePin, LOW);                         // if non of the upper condition is true
+      digitalWrite(greenPin, LOW);                        // Set all LEDs off
+      digitalWrite(redPin, LOW);
+
+    }
   }
 }

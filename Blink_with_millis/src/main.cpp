@@ -3,7 +3,7 @@
 
 
 unsigned long timestamp = 0;                                    // declare the variable to save the time
-const int ledPin = 2;                                           // variable ledPin for GPIO 2 
+const int ledPin = 25;                                           // variable ledPin for GPIO 2 
 int interval = 1000;                                            // the variable interval in milliseconds
 byte ledPinState = LOW;                                         // variable to hold the Pinstatus 
 
