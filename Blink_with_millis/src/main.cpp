@@ -20,23 +20,21 @@ void loop() {
 
   unsigned long currentmillis = millis();                       // starts a timer counting up in millisecs
 
-  if (currentmillis - timestamp > interval) {                   // if the counted time - the timestamp (difference) is greater than interval ?
+  if (currentmillis - timestamp >= interval) {                  // if the counted time - the timestamp (difference) is greater than interval ?
     if (ledPinState == LOW) {                                   // check if ledPinState is LOW ?
       ledPinState = HIGH;                                       // set ledpinstate to HIGH
-      timestamp = currentmillis;                                // timestamp becomes the count of time from currentmillis
       Serial.println("LED is ON");                              // print Info for debugging
-    }
-    else {                                                      
-      if (currentmillis - timestamp > interval) {               // if the counted time - the timestamp (difference) is greater than interval ?
+      }
+      else {                                                      
         if (ledPinState == HIGH) {                              // check if ledPinState is HIGH ?
           ledPinState = LOW;                                    // set ledpinstate to LOW
-          timestamp = currentmillis;                            // timestamp becomes the count of time from currentmillis
           Serial.println("LED is OFF");                         // print Info for debugging
         }
-      }
     }
 
+    timestamp = currentmillis;                                  // timestamp becomes the count of time from currentmillis
     digitalWrite(ledPin, ledPinState);                          // update the ledPin with the actual ledPinState
     Serial.println(timestamp);                                  // to see the timestamp changes !
+  
   }
 }
