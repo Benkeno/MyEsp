@@ -23,15 +23,15 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SD
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////   No.1 INA-219 SOLARPANEL SENSOR ////////////////////////
+double solar_shuntVoltage = 0.0;
+double solar_busVoltage = 0.0;
+double solar_current_mA = 0.0;
+double solar_loadVoltage = 0.0;
+double solar_power_mW = 0.0;
+bool solar_ina219_overflow = false;
 
 void panel_energy() {
 
-float solar_shuntVoltage = 0.0f;
-float solar_busVoltage = 0.0f;
-float solar_current_mA = 0.0f;
-float solar_loadVoltage = 0.0f;
-float solar_power_mW = 0.0f;
-bool solar_ina219_overflow = false;
 
 
     solar_shuntVoltage = ina219solar.getShuntVoltage_mV();
@@ -41,8 +41,28 @@ bool solar_ina219_overflow = false;
     solar_loadVoltage  = solar_busVoltage + (solar_shuntVoltage/1000);
     solar_ina219_overflow = ina219solar.getOverflow();
 
+}
 
-    //u8g2.clearBuffer();
+void solarSensorDebug() {
+    Serial.println("");
+    Serial.println("SOLAR");
+    Serial.print("Shunt Voltage [mV]: "); Serial.println(solar_shuntVoltage);
+    Serial.print("Bus Voltage [V]: "); Serial.println(solar_busVoltage);
+    Serial.print("Load Voltage [V]: "); Serial.println(solar_loadVoltage);
+    Serial.print("Current [mA]: "); Serial.println(solar_current_mA);
+    Serial.print("Bus Power [mW]: "); Serial.println(solar_power_mW);
+    if(!solar_ina219_overflow){
+      Serial.println("Solar Values OK - no overflow");
+    }
+    else{
+      Serial.println("Solar Overflow! Choose higher PGAIN");
+    }
+    Serial.println();
+  }
+
+void solarSensorDisplay() {
+
+    u8g2.clearBuffer();
     u8g2.setFontMode(0);
     u8g2.setFont(u8g2_font_squeezed_b6_tr);
     u8g2.drawStr(36,6,"Solarstrom");
@@ -62,38 +82,19 @@ bool solar_ina219_overflow = false;
     u8g2.print((solar_power_mW) /1000);
 
     u8g2.sendBuffer();
-
-
-    Serial.println("");
-    Serial.println("SOLAR");
-    Serial.print("Shunt Voltage [mV]: "); Serial.println(solar_shuntVoltage);
-    Serial.print("Bus Voltage [V]: "); Serial.println(solar_busVoltage);
-    Serial.print("Load Voltage [V]: "); Serial.println(solar_loadVoltage);
-    Serial.print("Current [mA]: "); Serial.println(solar_current_mA);
-    Serial.print("Bus Power [mW]: "); Serial.println(solar_power_mW);
-    if(!solar_ina219_overflow){
-      Serial.println("Solar Values OK - no overflow");
-    }
-    else{
-      Serial.println("Solar Overflow! Choose higher PGAIN");
-    }
-    Serial.println();
-  }
-
-
-
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////     INA-219 BATTERIE SENSOR ( 75mV/40A shunt / 1000 = 0,001875 ohm ////////////////////////
+double bat_shuntVoltage = 0.0;
+double bat_busVoltage = 0.0;
+double bat_current_mA = 0.0;
+double bat_loadVoltage = 0.0;
+double bat_power_mW = 0.0;
+bool bat_ina219_overflow = false;
 
 void batterie_energy() {
 
-float bat_shuntVoltage = 0.0f;
-float bat_busVoltage = 0.0f;
-float bat_current_mA = 0.0f;
-float bat_loadVoltage = 0.0f;
-float bat_power_mW = 0.0f;
-bool bat_ina219_overflow = false;
 
 
 
@@ -103,17 +104,36 @@ bool bat_ina219_overflow = false;
     bat_power_mW = ina219bat.getBusPower();
     bat_loadVoltage  = bat_busVoltage + (bat_shuntVoltage/1000);
     bat_ina219_overflow = ina219bat.getOverflow();
-/*
-    //u8g2.clearBuffer();
-    //u8g2.drawBox(10,40,80,10);
-    //u8g2.drawHLine(0,22,127);
-    u8g2.drawStr(5,35,"Akku:");
-    //u8g2.drawHLine(0,37,127);
-    u8g2.setCursor(65,35);
+}
+
+
+void batterieSensorDisplay() {
+
+    u8g2.clearBuffer();
+    u8g2.setFontMode(0);
+    u8g2.setFont(u8g2_font_squeezed_b6_tr);
+    u8g2.drawStr(36,6,"Batterie");
+    u8g2.drawHLine(0,8,127);
+
+    u8g2.setFont(u8g2_font_bytesize_tr);
+    u8g2.drawStr(2,27,"Volt   :");
+    u8g2.setCursor(65,27);
     u8g2.print(bat_loadVoltage);
-    //u8g2.drawBox(10,40,80,10);
+
+    u8g2.drawStr(2,45,"Amps :");
+    u8g2.setCursor(65,45);
+    u8g2.print((bat_current_mA) /1000);
+
+    u8g2.drawStr(2,63,"Watt  :");
+    u8g2.setCursor(65,63);
+    u8g2.print((bat_power_mW) /1000);
+
     u8g2.sendBuffer();
-*/   
+  
+    }
+ 
+
+void batterieSensorDebug() {
 
     Serial.println("");
     Serial.println("BATTERIE");
@@ -149,13 +169,15 @@ void welcome_message() {
     u8g2.sendBuffer();
   }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Initial Sensor Setup ////////////////
 
 void solarsensor_init() {
 
   if(!ina219solar.init()){
     Serial.println("INA219solar not connected!");
     }                                                    // start the instance for energy sensor ina219
-  ina219solar.setShuntSizeInOhms(0.01);                   // Shunt 320mV/3.2A = in Ohms (R100) /1000 /10= 0.01
+  ina219solar.setShuntSizeInOhms(0.1);                   // Shunt 320mV/3.2A = in Ohms (R100) /1000 /10= 0.01
   ina219solar.setADCMode(SAMPLE_MODE_128);               // set sample mode to mean value of 128 samples
   ina219solar.setPGain(PG_320);                           // Gain 80 for max 80 mV at shunt
   ina219solar.setCorrectionFactor(0.92);
@@ -167,7 +189,7 @@ void batteriesensor_init() {
   if(!ina219bat.init()){
     Serial.println("INA219bat not connected!");
     }                                                           // start the instance for energy sensor ina219
-  ina219bat.setShuntSizeInOhms(0.0001875);                       // Shunt 75mV/40A = in Ohms (R1.875) /1000 /10 = 0.0001875
+  ina219bat.setShuntSizeInOhms(0.001875);                       // Shunt 75mV/40A = in Ohms (R1.875) /1000 /10 = 0.0001875
   ina219bat.setADCMode(SAMPLE_MODE_128);                        // set sample mode to mean value of 128 samples
   ina219bat.setPGain(PG_80);                                    // Gain 80 for max 80 mV at shunt
   //ina219bat.setCorrectionFactor(0.92);
@@ -175,40 +197,89 @@ void batteriesensor_init() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Display Pages ////
+
+int page_counter=1 ; //To move beetwen pages
+int up = 26; //Up button
+boolean current_up = LOW;
+boolean last_up=LOW;
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////
+  //---- De-bouncing function for all buttons----//
+  boolean debounce(boolean last, int pin) {
+
+    boolean current = digitalRead(pin);
+
+      if (last != current) {
+        delay(15);
+        current = digitalRead(pin);
+      }
+
+  return current;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //// SETUP RUNNING ONCE   ///////
-
-
 void setup() {
   
   Serial.begin(115200);                    // Begin Serial Communication for Debugging and Output to Terminal
-  
+  pinMode(26, INPUT);
   u8g2.begin();                             // Start Display
   welcome_message();                        // Show message once
   delay(2000);                              // take a break
+  
   Wire.begin();                             // Begin Wire Objekt communication I2C
   solarsensor_init();                       // Set solarsensor config
-  batteriesensor_init();                    // Set batSensor config 
+  batteriesensor_init();                     // Set batSensor config 
   
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 /////  LOOP FOREVER  /////////
 
 
 void loop() {
 
-  static unsigned long adcUpdateTimepoint = millis();                // stets a timepiont from timer instance of actual millisec
+  panel_energy();
+  batterie_energy();
 
-  if (millis() - adcUpdateTimepoint > 2000U) {                       // if running time - timepoint time > 2000 millis. Every 2 seconds...
+  current_up = debounce(last_up, up);         //Debounce for Up button
 
-    adcUpdateTimepoint = millis();                                    // set new updateTimePiont from actual millis for next run
+    if (last_up== LOW && current_up == HIGH){ //When up button is pressed
+    u8g2.clearBuffer();                       //When page is changed, lcd clear to print new page
 
-    u8g2.clearBuffer();                                               // clear display buffer for following functions
-    panel_energy();
-    batterie_energy();
-  
-  }
-} 
+      if(page_counter <3){                    //Page counter never higher than 3(total of pages)
+        page_counter= page_counter +1;        //Page up
+
+        } else {                              // If page higher than 3 , stay back to page 1
+        page_counter= 1;
+
+      }
+    }
+
+    last_up = current_up;
+
+  switch (page_counter) {
+    case 1:{                                  //Design of home page 1
+      welcome_message();
+      }
+    break;
+
+    case 2: {                                 //Design of page 2
+      batterieSensorDisplay();
+      }
+    break;
+
+    case 3: {                                 //Design of page 3
+      solarSensorDisplay();
+      } 
+    break;
+
+  }     //switch end
+
+}    //loop end
   
 
