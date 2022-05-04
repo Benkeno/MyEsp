@@ -202,20 +202,24 @@ void batteriesensor_init() {
 int page_counter=1 ; //To move beetwen pages
 int up = 26; //Up button
 boolean current_up = LOW;
-boolean last_up=LOW;
-
+boolean last_up = LOW;
+long timepoint = 0L;
+int debouncetime = 15;
 
   /////////////////////////////////////////////////////////////////////////////////////////
   //---- De-bouncing function for all buttons----//
   boolean debounce(boolean last, int pin) {
 
+  unsigned long millis();
+
     boolean current = digitalRead(pin);
 
       if (last != current) {
-        delay(15);
-        current = digitalRead(pin);
+        if (millis() - timepoint > debouncetime) {
+          current = digitalRead(pin);
+          timepoint = millis();
+        }
       }
-
   return current;
 
 }
