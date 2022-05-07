@@ -1,6 +1,7 @@
+
 #include <Arduino.h>
 #include <Wire.h>
-#include <SPI.h>
+
 #include <Adafruit_BMP280.h>
 #include <DHT.h>
 
@@ -10,7 +11,7 @@
 
 
 
-unsigned long interval = 20000;
+unsigned long interval = 2000;
 int timepoint = 0;
 
 Adafruit_BMP280 bmp; // I2C Create Instanz from Objekt
