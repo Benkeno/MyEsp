@@ -1,96 +1,169 @@
 
 #include <Arduino.h>
-#include <Wire.h>
+#define ESP01
+//#define ESP32
 
+#ifdef ESP01
+#include <ESP8266WiFi.h>
+#endif  
+
+#ifdef ESP32
+#include <WiFi.h>
+#endif
+
+#include <PubSubClient.h>
+#include <Wire.h>
 #include <Adafruit_BMP280.h>
 #include <DHT.h>
 
-#define DHTPIN  4           // DHT22 data pin is connected to Arduino analog pin 
-#define DHTTYPE AM2301
+// Wire Pin Definitions /////
+#define sdaPin  0   // GPIO 00 as SDA on I2C Bus
+#define sclPin  2   // GPIO 02 as SCL on I2C Bus
+#define dhtPin  3   // RX0  for GPIO 03
 
+#define dhtType  DHT21    // DHT22 // Dht Sensor Typ (AM2301 = DHT21)
 
+ /////////// WiFi stuff /////////////////////
+ 
+const char* ssid     = "SSID";                         //// WiFi Netz
+const char* password = "PASSWORT";            //// WiFi Passwort
+const char* mqtt = "HOSTNAME";                      //// MQTT Broker Hostname
 
+/////////
+//////////// Variablen fuer Messwerte initialisieren ///////////
 
-unsigned long interval = 2000;
-int timepoint = 0;
+float tempAvg, tempBmp, pressure, alti, tempDht, humi, altiForPress;
 
-Adafruit_BMP280 bmp; // I2C Create Instanz from Objekt
-DHT dht22(DHTPIN, DHTTYPE);
+////////
+/////////// Objekte ///////////
 
+WiFiClient espClient;                     ////// Instanzen von Objekt erstellen (Uebergabewert)
+PubSubClient client(espClient);
+Adafruit_BMP280 bmp; // I2C
+DHT dht(dhtPin, dhtType);
 
+/////
+//////////// MQTT Verbinden //////////
 
-void readDHT() {     
-
-    float t = dht22.readTemperature();
-    float h = dht22.readHumidity();
-        
-        if ((t > -30) && (t < 65)) { 
-            // Convert the value to a char array
-                //char tempString[8];
-                //dtostrf(t, 6, 1, tempString);
-                Serial.print(F("Temperatur_Dht: "));
-                Serial.print(t);
-                Serial.println(" *C");
-            }
-
-            if ((h > 10) && (h < 100)) { 
-            // Convert the value to a char array
-                //char humString[8];
-                //dtostrf(h, 6, 1, humString);
-                Serial.print(F("Luft Rel.: "));
-                Serial.print(h);
-                Serial.println("%");
-            }
-        
-
-}
-
-void readBmp() {       
-
-    if (bmp.takeForcedMeasurement()) {
-    // can now print out the new measurements
-    Serial.print(F("Temperatur: "));
-    Serial.print(bmp.readTemperature ());
-    Serial.println(" °C");
-
-    Serial.print(F("Luftdruck: "));
-    Serial.print(bmp.readPressure()/100);
-    Serial.println(" hPa");
-
-    Serial.print(F("Höhe üN: "));
-    Serial.print(bmp.readAltitude(1017)); /* Adjusted to local forecast! */
-    Serial.println(" m");
-
-    Serial.println();
+void reconnect() {
+  
+  // Loop until we're reconnected
+  while (!client.connected()) {
     
-    } else {
-        Serial.println("Messung Fehlgeschlagen, Senosor prüfen !");
-        }
-          
-        
+    //Serial.print("Verbinde MQTT Broker...");
+    // Create a client ID
+    String clientId = "ESP01-Barometer";
+    String nodeOn = " verbunden";
+    clientId += nodeOn;
+    
+    // Attempt to connect
+    if (client.connect(clientId.c_str())) {
+      //Serial.println("verbunden");
+      // Once connected, publish an announcement once...
+      client.publish("iot/barometer/state", clientId.c_str(), false);
+     
+      } else {
+      
+        client.publish("iot/barometer/alarm", "MQTT KEINE VERBINDUNG , warte");
+        delay(2000); // wait and try again
+      }
+    }
 }
 
+////////////
 
+
+ 
 void setup() {
-
-  Serial.begin(115200);
-  dht22.begin();
-  bmp.begin();
-  /* Default settings from datasheet. */
+  
+  //pinMode(LED_BUILTIN, OUTPUT);
+  dht.begin();      // Sensor Init
+  Wire.begin(sdaPin,sclPin);    // Declare Pins for I2C Wire comunication
+  bmp.begin();                  // Sensor Init Default 0x77, Alternative (0x76)
   bmp.setSampling(Adafruit_BMP280::MODE_FORCED,     /* Operating Mode. */
-                  Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                  Adafruit_BMP280::SAMPLING_X4,     /* Temp. oversampling */
                   Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
                   Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                   Adafruit_BMP280::STANDBY_MS_1); /* Standby time. */
+
+  WiFi.mode(WIFI_STA);            // Set Wifi to connect a Station
+  WiFi.hostname("Barometer");     // Set a Hostname for DHCP
+  WiFi.begin(ssid, password);     // Provide Wifi Credientials
+  delay(1000);                    // wait for it
+  client.setServer(mqtt, 1883);   // MQTT init with (Host, Port)
+      
 }
 
 void loop() {
-
-unsigned long millis();
-    if (millis() - timepoint > interval) {
-        timepoint = millis();
-        //readDHT();
-        readBmp();
+  
+  // put your main code here, to run repeatedly:
+  if (!client.connected()) {           // if client is not connected , reconnect
+    reconnect(); 
+    
     }
- 
+    
+  client.loop();   {        // MQTT Loop 
+
+    
+    /// BMP280 Sensor ///
+    
+    if (bmp.takeForcedMeasurement()) {    // Take a single Shot measurement with settings above from BMP280 Sensor
+    
+    delay(1000);    // wait for it to finish
+    
+       //  print out the new measurements
+       
+    float tempBmp = (bmp.readTemperature());    // Read the Value and save it in variable
+    //char tempString[8];
+        //dtostrf(tempBmp, 6, 1, tempString);
+            //client.publish("iot/barometer/temp" , tempString, false);
+
+    float pressure = (bmp.readPressure()/100);    // Read the Value and save it in variable
+    char pressString[8];                          // creat a char array to hold a string 
+        dtostrf(pressure, 6, 1, pressString);     // convert float, 6 digits, 1 komma, to newString type
+            client.publish("iot/barometer/druck" , pressString, false);   // Publish MQTT Topic, MessageString, retain Flag
+               
+    float altiForPress = (bmp.seaLevelForAltitude(515.00f, pressure)); // Adjusted to local position! 
+    char altiForPressString[8];
+        dtostrf(altiForPress, 6, 1, altiForPressString);
+            client.publish("iot/barometer/hoeheDruck" , altiForPressString, false);
+    
+    float alti = (bmp.readAltitude(altiForPress)); // Adjusted to local forecast! or value from sealevel
+    char altiString[8];
+        dtostrf(alti, 6, 1, altiString);
+            client.publish("iot/barometer/hoehe" , altiString, false);
+
+    delay(2000); 
+    
+      /// Values from DHT Sensor
+      
+    float tempDht = dht.readTemperature();
+    
+    
+    float humi = dht.readHumidity();
+    char humiString[8];
+        dtostrf(humi, 6, 1, humiString);
+            client.publish("iot/barometer/humi" , humiString, false);
+
+     /// Temp average from both Sensors
+    tempAvg = ((tempBmp + tempDht)/2);    // calculate temp average from both sensors
+    char avgString[8];
+        dtostrf(tempAvg, 6, 1, avgString);
+            client.publish("iot/barometer/temp" , avgString, false); 
+    delay(2000);
+           
+    } else {
+    
+        client.publish("iot/barometer/alarm" , "BMP Forced measurement failed!");
+        delay(2000);
+        }
+    
+    client.publish("iot/barometer/state", "Bis bald !");
+
+    }
+  
+  client.disconnect();      // Disconnect from MQTT Beoker
+  WiFi.disconnect();        // Disconnect from Router
+  ESP.deepSleep(300e6);     // Set Sleep for some time in nano seconds (0 = sleep until pin 16 HIGH)
+  
 }
