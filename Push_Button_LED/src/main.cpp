@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 
-const int buttonPin = 5;
-const int ledPin = BUILTIN_LED;
+const int buttonPin = 18;
+const int ledPin = 36;
 int buttonState = 0;
 
 
@@ -12,7 +12,7 @@ int buttonState = 0;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
-  pinMode(buttonPin, INPUT);
+  pinMode(buttonPin, INPUT_PULLUP);
   pinMode(ledPin, OUTPUT);
 
 }
@@ -24,14 +24,14 @@ void loop() {
   buttonState = digitalRead(buttonPin);
 
     // check if the pushbutton is pressed. e.g. the buttonState is HIGH:
-    if (buttonState == HIGH) {
+    if (buttonState == LOW) {
       // turn LED on:
       digitalWrite(ledPin, HIGH);  
-      Serial.println("Button ist HIGH und die Led ist AN");
+      Serial.println("Button ist LOW und die Led ist AN");
     } else {
       // turn LED off:
         digitalWrite(ledPin, LOW);
-        Serial.println("Button ist LOW und die Led ist AUS");
+        Serial.println("Button ist HIGH und die Led ist AUS");
     }
 
 }

@@ -1,5 +1,4 @@
 
-#include <Arduino.h>
 #define ESP01
 //#define ESP32
 
@@ -15,6 +14,9 @@
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
 #include <DHT.h>
+#include <Benwifi.h>
+
+
 
 // Wire Pin Definitions /////
 #define sdaPin  0   // GPIO 00 as SDA on I2C Bus
@@ -25,9 +27,15 @@
 
  /////////// WiFi stuff /////////////////////
  
-const char* ssid     = "SSID";                         //// WiFi Netz
-const char* password = "PASSWORT";            //// WiFi Passwort
-const char* mqtt = "HOSTNAME";                      //// MQTT Broker Hostname
+WiFiClient espClient;                     ////// Instanzen von Objekt erstellen (Uebergabewert)
+PubSubClient client(espClient);
+Adafruit_BMP280 bmp; // I2C
+DHT dht(dhtPin, dhtType);
+Benwifi benwifi;
+
+char* ssid = benwifi.ssid();                // Your "SSID"
+char* passw = benwifi.passwort();             // Your "SUPER_SECRET_PASSWORD"
+const char* mqtt = "XXXXXXXXX";                      //// MQTT Broker Hostname
 
 /////////
 //////////// Variablen fuer Messwerte initialisieren ///////////
@@ -37,10 +45,6 @@ float tempAvg, tempBmp, pressure, alti, tempDht, humi, altiForPress;
 ////////
 /////////// Objekte ///////////
 
-WiFiClient espClient;                     ////// Instanzen von Objekt erstellen (Uebergabewert)
-PubSubClient client(espClient);
-Adafruit_BMP280 bmp; // I2C
-DHT dht(dhtPin, dhtType);
 
 /////
 //////////// MQTT Verbinden //////////
@@ -88,7 +92,7 @@ void setup() {
 
   WiFi.mode(WIFI_STA);            // Set Wifi to connect a Station
   WiFi.hostname("Barometer");     // Set a Hostname for DHCP
-  WiFi.begin(ssid, password);     // Provide Wifi Credientials
+  WiFi.begin(ssid, passw);     // Provide Wifi Credientials
   delay(1000);                    // wait for it
   client.setServer(mqtt, 1883);   // MQTT init with (Host, Port)
       
