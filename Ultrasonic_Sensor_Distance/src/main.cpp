@@ -6,7 +6,7 @@
 // define pin variables
 const int trigPin = 12;                   // Pin 12 does not chang -> const int
 const int echoPin = 13;                   // Pin 13 does not change -> const int
-const int bluePin = 27;
+const int bluePin = 17;
 const int greenPin = 26;
 const int redPin = 25;
 
@@ -58,13 +58,13 @@ void loop() {
     Serial.print(distance);
     Serial.println(" cm");
 
-    if ((distance > 30.0f) && (distance < 50.0f)) {       // bluePin range
+    if ((distance > 10.0f) && (distance < 25.0f)) {       // bluePin range
       digitalWrite(bluePin, HIGH);                        // Set blue LED on
       }
-    else if ((distance <=30.0f) && (distance > 10.0f)) {  // greenPin range
+    else if ((distance <=10.0f) && (distance > 5.0f)) {  // greenPin range
       digitalWrite(greenPin, HIGH);                       // Set green LED on
       }
-    else if (distance <= 10.0) {                          // redPin range
+    else if (distance <= 5.0) {                          // redPin range
       digitalWrite(redPin, HIGH);                         // Set red LED on
       }
 

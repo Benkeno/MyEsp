@@ -28,7 +28,7 @@ void setup()
   Serial.println();
 
 
-}
+}*/
 /*
 double getLux (int lichtWert)
 {
@@ -182,7 +182,10 @@ void loop()
         ledcWriteTone(4, 0);
         delay(2000);
     }
+*/
+  
 
+/*
 else if (gelesen == "licht") {
 
         int lichtRaw = analogRead(licht);

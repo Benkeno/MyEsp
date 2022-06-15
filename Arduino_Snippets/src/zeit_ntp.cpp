@@ -1,12 +1,12 @@
-/*#include <Arduino.h>
+#include <Arduino.h>
 #include <WiFi.h>
 #include "time.h"
-
+#include <Benwifi.h>
 
 Benwifi benwifi;
 
-char* ssid = "SSID_BLAH";                // Your "SSID"
-char* passw = "LALALALLLA";             // Your "SUPER_SECRET_PASSWORD"
+char* ssid = benwifi.ssid;                // Your "SSID"
+char* passw = benwifi.passwort;             // Your "SUPER_SECRET_PASSWORD"
 
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 3600;

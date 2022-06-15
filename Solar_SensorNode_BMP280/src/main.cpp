@@ -1,6 +1,6 @@
 
-#define ESP01
-//#define ESP32
+//#define ESP01
+#define ESP32
 
 #ifdef ESP01
 #include <ESP8266WiFi.h>
