@@ -19,12 +19,9 @@ int distanzToAmpel;
 byte LEDPinArray[ledZahl] = { rotLED, gelbLED, gruenLED  };
 LiquidCrystal_I2C lcd(0x27,16,2);
 
-
-
-
 // defines changing variables
 long duration;                            // long data type for duration
-double distance;                           // float data for precise xx.xxx measurement
+double distance;                           // double data for precise xx.xxx measurement
 
 
 // define variables for timer
@@ -56,6 +53,7 @@ void distanzMessen() {
     
       if (currentMillis - timestamp2 >= 800) {              // if actual time minus previous time greater than interval
         timestamp2 = currentMillis;                         // new timestamp with currenttime
+        
         if (distance < 120.00f) {
             lcd.setCursor(0,0);                             // show "----"
             lcd.print("  ! MESSUNG ! ");
@@ -65,19 +63,15 @@ void distanzMessen() {
             lcd.print(" cm");
             }
 
-        if (distance >= 120.00f) {                      // if distance greater or equal 100cm 
+        if (distance >= 120.00f) {                      // if distance greater or equal 120cm 
             lcd.setCursor(0,0);                             // show "----"
             lcd.print("Genug Platz...");
             lcd.setCursor(0,1);                             // show "----"
             lcd.print("Distanz: ---- ");
-            }
-
-      
-         
-       
+            }        
       }
 
-  }
+    }
 
 }
 
@@ -114,11 +108,12 @@ void setup() {
   delay(2000);
   lcd.clear();
 }
+
+
+
 void loop() {
 
   distanzMessen();
   ledAmpel();
-  
- 
 
 }
