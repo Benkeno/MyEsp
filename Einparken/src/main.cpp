@@ -1,9 +1,10 @@
+// Measuring Distance with ESP32 and Ultrasonic Sensor !
+// Three different ranges are indicated by 3 LEDs 
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-// Measuring Distance with ESP32 and Ultrasonic Sensor !
-// Three different ranges are indicated by 3 LEDs 
 
 // define pin variables
 const int trigPin = 12;                   // Pin 12 does not chang -> const int
